@@ -1,0 +1,15 @@
+{
+  "name": "loop",
+  "version": "0.0.0",
+  "description": "binary stream parser",
+  "main": "index.js",
+  "scripts": {
+    "test": "tap test/*.js"
+  },
+  "author": "Lee Treveil",
+  "license": "MIT",
+  "dependencies": {
+    "tape": "~2.3.2",
+    "buffer-equal": "0.0.0"
+  }
+}
