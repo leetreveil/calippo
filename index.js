@@ -5,12 +5,8 @@ exports.parse = function (stream, cb) {
     var next = cb()
 
     stream.on('readable', function () {
-        if (next === undefined || next === DONE) {
-            return
-        }
-
         var chunk
-        while ((chunk = stream.read(next.len)) !== null) {
+        while (next !== undefined && (chunk = stream.read(next.len)) !== null) {
             assert(chunk.length === next.len)
 
             if (!(next.get instanceof Function)) {
@@ -19,9 +15,6 @@ exports.parse = function (stream, cb) {
             }
 
             next = cb(next.get.apply(chunk, [0]))
-            if (next === undefined || next === DONE) {
-                return
-            }
         }
     })
 }
@@ -48,7 +41,7 @@ var Str = exports.String = function (len, encoding) {
     }
 }
 
-var DONE = exports.DONE = null
+var DONE = exports.DONE = undefined
 
 // export all node buf.readXXX methods as our own
 for (var funcName in Buffer.prototype) {
