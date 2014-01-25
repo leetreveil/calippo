@@ -1,7 +1,5 @@
-var loop = require('../index')
+var loop = require('./index')
 var test = require('tape')
-var path = require('path')
-var fs = require('fs')
 var bufferEqual = require('buffer-equal')
 var streamifier = require('streamifier')
 

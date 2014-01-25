@@ -1,10 +1,10 @@
 {
-  "name": "loop",
+  "name": "squirt",
   "version": "0.0.0",
   "description": "binary stream parser",
   "main": "index.js",
   "scripts": {
-    "test": "tap test/*.js"
+    "test": "tap test.js"
   },
   "author": "Lee Treveil",
   "license": "MIT",
