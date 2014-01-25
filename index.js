@@ -20,7 +20,7 @@ exports.parse = function (stream, cb) {
 }
 
 var Buf = exports.Buffer = function (len) {
-    if (!(this instanceof Buf)) return new Buf(len);
+    if (!(this instanceof Buf)) return new Buf(len)
     this.len = len
     this.get = function () {
         return this
@@ -28,13 +28,13 @@ var Buf = exports.Buffer = function (len) {
 }
 
 var Skip = exports.Skip = function (len, next) {
-    if (!(this instanceof Skip)) return new Skip(len, next);
+    if (!(this instanceof Skip)) return new Skip(len, next)
     this.len = len
     this.get = next
 }
 
 var Str = exports.String = function (len, encoding) {
-    if (!(this instanceof Str)) return new Str(len, encoding);
+    if (!(this instanceof Str)) return new Str(len, encoding)
     this.len = len
     this.get = function () {
         return this.toString(encoding)

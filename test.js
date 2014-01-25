@@ -25,14 +25,14 @@ test('should be able to read uint16be', function (t) {
 
 test('should be able to read uint16be then uint16le', function (t) {
     t.plan(2)
-    var pos = 0;
+    var pos = 0
     loop.parse(btos(new Buffer([0x00, 0x10, 0x10, 0x00])), function (v) {
         if (v === undefined) {
             return loop.readUInt16BE
         }
         if (pos === 0) {
             t.equal(v, 16)
-            pos++;
+            pos++
             return loop.readUInt16LE
         }
         t.equal(v, 16)
@@ -103,15 +103,17 @@ test('should be able to use all the standard node Buffer.readXXX methods', funct
 
     t.plan(Object.keys(functions).length)
 
-    for (funcName in functions) {
-        (function (funcName) {
-            var x = functions[funcName]
-            loop.parse(btos(new Buffer(x.bytes)), function (v) {
-                if (v != undefined) {
-                    t.equal(v, x.expected, funcName)
-                }
-                return loop[funcName];
-            })
-        })(funcName)
+    var runParser = function (funcName) {
+        var x = functions[funcName]
+        loop.parse(btos(new Buffer(x.bytes)), function (v) {
+            if (v !== undefined) {
+                t.equal(v, x.expected, funcName)
+            }
+            return loop[funcName]
+        })
+    }
+
+    for (var funcName in functions) {
+        runParser(funcName)
     }
 })
