@@ -1,53 +1,27 @@
 var assert = require('assert')
 
-// THIS MODULE IS NOW CALLED 'FLOOP' because I like it :)))
-
 exports.parse = function (stream, cb) {
-    console.log('in parse for the first time')
 
-    stream.once('readable', function () {
-        console.log('in readable')
-        var next, poop
-        while ( (next = cb(poop)) ) {
-            console.log('next: ' + next)
-            console.log('poop: ' + poop)
+    var next = cb()
 
-            var chunk = readChunk(stream, next.len)
-            console.log(chunk)
-            if (!chunk) {
-                console.log('break!')
-                break
-            }
-
-            if (next.get instanceof Function) {
-                poop = next.get.apply(chunk, [0])
-            } else {
-                // console.log('in???')
-                // do a second read to get the data we want
-                // after skipping
-                chunk = readChunk(stream, next.get.len)
-                poop = next.get.get.apply(chunk, [0])
-            }
+    stream.on('readable', function () {
+        if (next === undefined || next === DONE) {
+            return
         }
+        assert(next.len)
+        assert(next.get)
+
+        var chunk = stream.read(next.len)
+        if (!chunk) return
+        assert(chunk.length === next.len)
+
+        if (!(next.get instanceof Function)) {
+            next = next.get
+            return
+        }
+
+        next = cb(next.get.apply(chunk, [0]))
     })
-}
-
-function readChunk (stream, len) {
-    var chunk
-    while (null !== (chunk = stream.read(len))) {
-        console.log(chunk)
-        return chunk
-    }
-}
-
-var readUInt16BE = exports.readUInt16BE = {
-    len : 2,
-    get : Buffer.prototype.readUInt16BE
-}
-
-var readUInt16LE = exports.readUInt16LE = {
-    len : 2,
-    get : Buffer.prototype.readUInt16LE
 }
 
 exports.Buffer = function (len) {
@@ -69,4 +43,25 @@ exports.String = function (len, encoding) {
     }
 }
 
-var DONE = exports.DONE = null;
+var DONE = exports.DONE = null
+
+// export all node buf.readXXX methods as our own
+for (var funcName in Buffer.prototype) {
+    if (funcName.substring(0, 4) === 'read') {
+        var bits = funcName.match(/\d+/g)
+
+        var byteLen
+        if (bits !== null) {
+            byteLen = parseInt(bits[0]) / 8
+        } else if (funcName.substring(0, 9) === 'readFloat') {
+            byteLen = 4
+        } else if (funcName.substring(0, 10) === 'readDouble') {
+            byteLen = 8
+        }
+
+        exports[funcName] = {
+            get : Buffer.prototype[funcName],
+            len : byteLen
+        }
+    }
+}

@@ -3,11 +3,12 @@ var test = require('tape')
 var path = require('path')
 var fs = require('fs')
 var bufferEqual = require('buffer-equal')
+var streamifier = require('streamifier')
 
-var sample = path.join(__dirname, 'test.bin')
+var btos = streamifier.createReadStream
 
 test('should return undefined immediately', function (t) {
-    loop.parse(fs.createReadStream(sample), function (v) {
+    loop.parse(btos(null), function (v) {
         t.equal(v, undefined)
         t.end()
     })
@@ -15,7 +16,7 @@ test('should return undefined immediately', function (t) {
 
 test('should be able to read uint16be', function (t) {
     t.plan(1)
-    loop.parse(fs.createReadStream(sample), function (v) {
+    loop.parse(btos(new Buffer([0x00, 0x10])), function (v) {
         if (v === undefined) {
             return loop.readUInt16BE
         }
@@ -27,7 +28,7 @@ test('should be able to read uint16be', function (t) {
 test('should be able to read uint16be then uint16le', function (t) {
     t.plan(2)
     var pos = 0;
-    loop.parse(fs.createReadStream(sample), function (v) {
+    loop.parse(btos(new Buffer([0x00, 0x10, 0x10, 0x00])), function (v) {
         if (v === undefined) {
             return loop.readUInt16BE
         }
@@ -43,7 +44,7 @@ test('should be able to read uint16be then uint16le', function (t) {
 
 test('should be able to read raw buffer', function (t) {
     t.plan(1)
-    loop.parse(fs.createReadStream(sample), function (v) {
+    loop.parse(btos(new Buffer([0x00, 0x10])), function (v) {
         if (v === undefined) {
             return new loop.Buffer(2)
         }
@@ -54,7 +55,7 @@ test('should be able to read raw buffer', function (t) {
 
 test('should be able to skip n bytes', function (t) {
     t.plan(1)
-    loop.parse(fs.createReadStream(sample), function (v) {
+    loop.parse(btos(new Buffer([0x00, 0x00, 0x10, 0x00])), function (v) {
         if (v === undefined) {
             return new loop.Skip(2, new loop.Buffer(2))
         }
@@ -65,19 +66,54 @@ test('should be able to skip n bytes', function (t) {
 
 test('should be able to skip n bytes then read a string', function (t) {
     t.plan(1)
-    loop.parse(fs.createReadStream(sample), function (v) {
+    loop.parse(btos(new Buffer([0x00, 0x68, 0x69])), function (v) {
         if (v === undefined) {
-            return new loop.Skip(4, new loop.String(5))
+            return new loop.Skip(1, new loop.String(2))
         }
-        t.equal(v, 'hello')
+        t.equal(v, 'hi')
         t.end()
     })
 })
 
 test('should be able to disengage from stream', function (t) {
     t.plan(1)
-    loop.parse(fs.createReadStream(sample), function (v) {
-        t.ok(true)
+    loop.parse(btos(null), function (v) {
+        t.ok(true, 'disengaged!')
         return loop.DONE
     })
+})
+
+test('should be able to use all the standard node Buffer.readXXX methods', function (t) {
+    var functions = {
+        'readUInt8': { expected: 255, bytes : [0xFF] },
+        'readUInt16LE': { expected: 256, bytes : [0x00, 0x01] },
+        'readUInt16BE': { expected: 1, bytes : [0x00, 0x01] },
+        'readUInt32LE': { expected: 1, bytes : [0x01, 0x00, 0x00, 0x00] },
+        'readUInt32BE': { expected: 1, bytes : [0x00, 0x00, 0x00, 0x01] },
+        'readInt8': { expected: -1, bytes : [0xFF] },
+        'readInt16LE': { expected: 255, bytes : [0xFF, 0x00] },
+        'readInt16BE': { expected: 255, bytes : [0x00, 0xFF] },
+        'readInt32LE': { expected: 255, bytes : [0xFF, 0x00, 0x00, 0x00] },
+        'readInt32BE': { expected: 255, bytes : [0x00, 0x00, 0x00, 0xFF] },
+        'readFloatLE': { expected: 1, bytes : [0x00, 0x00, 0x80, 0x3f] },
+        'readFloatBE': { expected: 1, bytes : [0x3f, 0x80, 0x00, 0x00] },
+        'readDoubleLE': { expected: 0.3333333333333333,
+            bytes : [0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0xd5, 0x3f] },
+        'readDoubleBE': { expected: 0.3333333333333333,
+            bytes : [0x3f, 0xd5, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55] }
+    }
+
+    t.plan(Object.keys(functions).length)
+
+    for (funcName in functions) {
+        (function (funcName) {
+            var x = functions[funcName]
+            loop.parse(btos(new Buffer(x.bytes)), function (v) {
+                if (v != undefined) {
+                    t.equal(v, x.expected, funcName)
+                }
+                return loop[funcName];
+            })
+        })(funcName)
+    }
 })
