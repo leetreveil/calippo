@@ -4,6 +4,7 @@
   "description": "binary stream parser",
   "main": "index.js",
   "scripts": {
+    "pretest": "jshint index.js test.js",
     "test": "tap test.js"
   },
   "author": "Lee Treveil",
@@ -11,6 +12,13 @@
   "dependencies": {
     "tape": "~2.3.2",
     "buffer-equal": "0.0.0",
-    "streamifier": "~0.1.0"
+    "streamifier": "~0.1.0",
+    "jshint": "~2.4.2"
+  },
+  "jshintConfig": {
+    "asi": true,
+    "node": true,
+    "maxlen": 100,
+    "indent": 4
   }
 }
