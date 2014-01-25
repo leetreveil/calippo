@@ -8,19 +8,21 @@ exports.parse = function (stream, cb) {
         if (next === undefined || next === DONE) {
             return
         }
-        assert(next.len)
-        assert(next.get)
 
-        var chunk = stream.read(next.len)
-        if (!chunk) return
-        assert(chunk.length === next.len)
+        var chunk
+        while ((chunk = stream.read(next.len)) !== null) {
+            assert(chunk.length === next.len)
 
-        if (!(next.get instanceof Function)) {
-            next = next.get
-            return
+            if (!(next.get instanceof Function)) {
+                next = next.get
+                return
+            }
+
+            next = cb(next.get.apply(chunk, [0]))
+            if (next === undefined || next === DONE) {
+                return
+            }
         }
-
-        next = cb(next.get.apply(chunk, [0]))
     })
 }
 
