@@ -1,0 +1,3 @@
+This was a *failed* experiment to see if I could rewrite the binary parser module [node-strtok](https://github.com/pgriess/node-strtok) using the more modern [Streams2](http://nodejs.org/api/stream.html#stream_readable_read_size) API.
+
+The new parser was on average 3x slower than node-strtok, it seems the performance of `readable.read([size])` is an order of magnitude slower than `readable.on('data', func)`. 
