@@ -1,15 +1,23 @@
 exports.parse = function (stream, cb) {
-    var next = cb()
-    var chunk
+    var next = cb(undefined, deferCallback)
+
+    function deferCallback (t) {
+        if (next !== DEFER) {
+            throw new Error('refusing to overwrite non-DEFER type');
+        }
+        next = t
+    }
 
     function read () {
-        while (next !== undefined && (chunk = stream.read(next.len)) !== null) {
+        var chunk
+        while (next !== undefined && next !== DONE &&
+            next !== DEFER && (chunk = stream.read(next.len)) !== null) {
 
             if (!(next.get instanceof Function)) {
                 next = next.get
                 return
             }
-            next = cb(next.get.apply(chunk, [0]))
+            next = cb(next.get.apply(chunk, [0]), deferCallback)
         }
     }
     // Optimistically read any data from the internal buffer before
@@ -19,6 +27,9 @@ exports.parse = function (stream, cb) {
     read()
     stream.on('readable', read)
 }
+
+var DONE = exports.DONE = {}
+var DEFER = exports.DEFER = {}
 
 var Buf = exports.Buffer = function (len) {
     if (!(this instanceof Buf)) return new Buf(len)
@@ -41,8 +52,6 @@ var Str = exports.String = function (len, encoding) {
         return this.toString(encoding)
     }
 }
-
-var DONE = exports.DONE = undefined
 
 // export all node buf.readXXX methods as our own
 for (var funcName in Buffer.prototype) {

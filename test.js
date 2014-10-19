@@ -97,6 +97,20 @@ test('should optimistically read from stream before readable event has fired', f
     })
 })
 
+test('should be able to defer the type callback', function (t) {
+    t.plan(1)
+    loop.parse(btos(new Buffer([0x00, 0x68])), function (v, cb) {
+        if (v === undefined) {
+            process.nextTick(function () {
+                cb(loop.Buffer(2))
+            })
+            return loop.DEFER
+        }
+        t.ok(bufferEqual(v, new Buffer([0x00, 0x68])), 'buffers')
+        t.end()
+    })
+})
+
 test('should be able to use all the standard node Buffer.readXXX methods', function (t) {
     var functions = {
         'readUInt8': { expected: 255, bytes : [0xFF] },
