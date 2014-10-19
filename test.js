@@ -81,6 +81,22 @@ test('should be able to disengage from stream', function (t) {
     })
 })
 
+test('should optimistically read from stream before readable event has fired', function (t) {
+    t.plan(1)
+
+    var stream = btos(new Buffer([0x00, 0x68]))
+
+    stream.once('readable', function () {
+        loop.parse(stream, function (v) {
+            if (v === undefined) {
+                return loop.Buffer(2)
+            }
+            t.ok(bufferEqual(v, new Buffer([0x00, 0x68])), 'buffers')
+            t.end()
+        })
+    })
+})
+
 test('should be able to use all the standard node Buffer.readXXX methods', function (t) {
     var functions = {
         'readUInt8': { expected: 255, bytes : [0xFF] },

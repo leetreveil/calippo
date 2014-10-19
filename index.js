@@ -1,19 +1,23 @@
 exports.parse = function (stream, cb) {
-
     var next = cb()
+    var chunk
 
-    stream.on('readable', function () {
-        var chunk
+    function read () {
         while (next !== undefined && (chunk = stream.read(next.len)) !== null) {
 
             if (!(next.get instanceof Function)) {
                 next = next.get
                 return
             }
-
             next = cb(next.get.apply(chunk, [0]))
         }
-    })
+    }
+    // Optimistically read any data from the internal buffer before
+    // we start listening to 'readable' events. There are certain
+    // situations where data is available before a 'readable' event
+    // has been fired, e.g. someone listening to 'readable' upstream.
+    read()
+    stream.on('readable', read)
 }
 
 var Buf = exports.Buffer = function (len) {
