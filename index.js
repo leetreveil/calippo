@@ -6,6 +6,7 @@ exports.parse = function (stream, cb) {
             throw new Error('refusing to overwrite non-DEFER type');
         }
         next = t
+        read()
     }
 
     function read () {
