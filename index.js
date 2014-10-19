@@ -1,5 +1,3 @@
-var assert = require('assert')
-
 exports.parse = function (stream, cb) {
 
     var next = cb()
@@ -7,7 +5,6 @@ exports.parse = function (stream, cb) {
     stream.on('readable', function () {
         var chunk
         while (next !== undefined && (chunk = stream.read(next.len)) !== null) {
-            assert(chunk.length === next.len)
 
             if (!(next.get instanceof Function)) {
                 next = next.get
