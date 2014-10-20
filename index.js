@@ -3,7 +3,7 @@ exports.parse = function (stream, cb) {
 
     function deferCallback (t) {
         if (next !== DEFER) {
-            throw new Error('refusing to overwrite non-DEFER type');
+            throw new Error('refusing to overwrite non-DEFER type')
         }
         next = t
         read()

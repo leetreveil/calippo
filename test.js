@@ -53,7 +53,7 @@ test('should be able to read raw buffer', function (t) {
 
 test('should be able to skip n bytes', function (t) {
     t.plan(1)
-    var pos = 0;
+    var pos = 0
     loop.parse(btos(new Buffer([0x00, 0x00, 0x10, 0x00])), function (v) {
         if (v === undefined) {
             return loop.Skip(2)

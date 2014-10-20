@@ -4,7 +4,7 @@
   "description": "binary stream parser",
   "main": "index.js",
   "scripts": {
-    "pretest": "jshint index.js test.js",
+    "pretest": "jshint index.js test.js && ! grep ';' index.js test.js",
     "test": "tap test.js"
   },
   "author": "Lee Treveil",
