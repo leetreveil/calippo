@@ -53,22 +53,16 @@ test('should be able to read raw buffer', function (t) {
 
 test('should be able to skip n bytes', function (t) {
     t.plan(1)
+    var pos = 0;
     loop.parse(btos(new Buffer([0x00, 0x00, 0x10, 0x00])), function (v) {
         if (v === undefined) {
-            return loop.Skip(2, loop.Buffer(2))
+            return loop.Skip(2)
+        }
+        if (pos === 0) {
+            pos++
+            return loop.Buffer(2)
         }
         t.ok(bufferEqual(v, new Buffer([0x10, 0x00])), 'buffers')
-        t.end()
-    })
-})
-
-test('should be able to skip n bytes then read a string', function (t) {
-    t.plan(1)
-    loop.parse(btos(new Buffer([0x00, 0x68, 0x69])), function (v) {
-        if (v === undefined) {
-            return loop.Skip(1, loop.String(2))
-        }
-        t.equal(v, 'hi')
         t.end()
     })
 })

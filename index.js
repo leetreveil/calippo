@@ -14,10 +14,6 @@ exports.parse = function (stream, cb) {
         while (next !== undefined && next !== DONE &&
             next !== DEFER && (chunk = stream.read(next.len)) !== null) {
 
-            if (!(next.get instanceof Function)) {
-                next = next.get
-                return
-            }
             next = cb(next.get.apply(chunk, [0]), deferCallback)
         }
     }
@@ -40,10 +36,12 @@ var Buf = exports.Buffer = function (len) {
     }
 }
 
-var Skip = exports.Skip = function (len, next) {
-    if (!(this instanceof Skip)) return new Skip(len, next)
+var Skip = exports.Skip = function (len) {
+    if (!(this instanceof Skip)) return new Skip(len)
     this.len = len
-    this.get = next
+    this.get = function () {
+        return null
+    }
 }
 
 var Str = exports.String = function (len, encoding) {
