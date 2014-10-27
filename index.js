@@ -12,24 +12,24 @@ var Squirt = module.exports = function (cb, options) {
 
     stream.Transform.call(this, options)
 
-    this.cb = cb
-    this.buffer = new bl()
+    this._cb = cb
+    this._buffer = new bl()
     this.DEFER = {}
-    this.next = cb.apply(this, [undefined])
+    this._next = cb.apply(this, [undefined])
 }
 
 util.inherits(Squirt, stream.Transform)
 
 Squirt.prototype.defer = function (t) {
-    if (this.next !== this.DEFER) {
+    if (this._next !== this.DEFER) {
         throw new Error('refusing to overwrite non-DEFER type')
     }
-    this.next = t
+    this._next = t
     this._rread()
 }
 
 Squirt.prototype._transform = function _transform (input, encoding, callback) {
-    this.buffer.append(input)
+    this._buffer.append(input)
     this._rread()
     callback()
 }
@@ -38,18 +38,18 @@ Squirt.prototype._rread = function () {
     var chunk
     var offset = 0
 
-    while (this.next !== undefined && this.next !== this.DEFER &&
-           (chunk = this.buffer.slice(offset, offset + this.next.len)).length === this.next.len) {
+    while (this._next !== undefined && this._next !== this.DEFER &&
+        (chunk = this._buffer.slice(offset, offset + this._next.len)).length === this._next.len) {
 
         offset += chunk.length
-        this.next = this.cb.apply(this, [this.next.get.apply(chunk, [0])])
+        this._next = this._cb.apply(this, [this._next.get.apply(chunk, [0])])
     }
 
-    if (this.next === undefined) {
+    if (this._next === undefined) {
         this.push(null)
     }
 
-    this.buffer.consume(offset)
+    this._buffer.consume(offset)
 }
 
 var Buf = Squirt.prototype.Buffer = function (len) {
