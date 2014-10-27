@@ -1,4 +1,4 @@
-var loop = require('./index')
+var Squirt = require('./index')
 var test = require('tape')
 var bufferEqual = require('buffer-equal')
 var streamifier = require('streamifier')
@@ -6,122 +6,94 @@ var streamifier = require('streamifier')
 var btos = streamifier.createReadStream
 
 test('should return undefined immediately', function (t) {
-    loop.parse(btos(null), function (v) {
+    t.plan(1)
+    btos(new Buffer([0x00, 0x10])).pipe(Squirt(function (v) {
         t.equal(v, undefined)
         t.end()
-    })
+    }))
 })
 
 test('should be able to read uint16be', function (t) {
     t.plan(1)
-    loop.parse(btos(new Buffer([0x00, 0x10])), function (v) {
+    btos(new Buffer([0x00, 0x10])).pipe(Squirt(function (v) {
         if (v === undefined) {
-            return loop.readUInt16BE
+            return this.readUInt16BE
         }
         t.equal(v, 16)
         t.end()
-    })
+    }))
 })
 
 test('should be able to read uint16be then uint16le', function (t) {
     t.plan(2)
     var pos = 0
-    loop.parse(btos(new Buffer([0x00, 0x10, 0x10, 0x00])), function (v) {
+    btos(new Buffer([0x00, 0x10, 0x10, 0x00])).pipe(Squirt(function (v) {
         if (v === undefined) {
-            return loop.readUInt16BE
+            return this.readUInt16BE
         }
         if (pos === 0) {
             t.equal(v, 16)
             pos++
-            return loop.readUInt16LE
+            return this.readUInt16LE
         }
         t.equal(v, 16)
         t.end()
-    })
+    }))
 })
 
 test('should be able to read raw buffer', function (t) {
     t.plan(1)
-    loop.parse(btos(new Buffer([0x00, 0x10])), function (v) {
+    btos(new Buffer([0x00, 0x10])).pipe(Squirt(function (v) {
+        console.log(this)
         if (v === undefined) {
-            return loop.Buffer(2)
+            return this.Buffer(2)
         }
         t.ok(bufferEqual(v, new Buffer([0x00, 0x10])), 'buffers')
         t.end()
-    })
+    }))
 })
 
 test('should be able to skip n bytes', function (t) {
     t.plan(1)
     var pos = 0
-    loop.parse(btos(new Buffer([0x00, 0x00, 0x10, 0x00])), function (v) {
+    btos(new Buffer([0x00, 0x00, 0x10, 0x00])).pipe(Squirt(function (v) {
         if (v === undefined) {
-            return loop.Skip(2)
+            return this.Skip(2)
         }
         if (pos === 0) {
             pos++
-            return loop.Buffer(2)
+            return this.Buffer(2)
         }
         t.ok(bufferEqual(v, new Buffer([0x10, 0x00])), 'buffers')
         t.end()
-    })
-})
-
-test('should be able to disengage from stream', function (t) {
-    t.plan(1)
-    loop.parse(btos(null), function (v) {
-        t.ok(true, 'disengaged!')
-        return loop.DONE
-    })
-})
-
-test('should optimistically read from stream before readable event has fired', function (t) {
-    t.plan(1)
-
-    var stream = btos(new Buffer([0x00, 0x68]))
-
-    stream.once('readable', function () {
-        loop.parse(stream, function (v) {
-            if (v === undefined) {
-                return loop.Buffer(2)
-            }
-            t.ok(bufferEqual(v, new Buffer([0x00, 0x68])), 'buffers')
-            t.end()
-        })
-    })
+    }))
 })
 
 test('should be able to defer the type callback', function (t) {
     t.plan(1)
-    loop.parse(btos(new Buffer([0x00, 0x68])), function (v, cb) {
+    btos(new Buffer([0x00, 0x68, 0x00, 0x68])).pipe(Squirt(function (v) {
+        console.log('v: ', v)
         if (v === undefined) {
+            var self = this
             process.nextTick(function () {
-                cb(loop.Buffer(2))
+                self.defer(self.Buffer(2))
             })
-            return loop.DEFER
+            // console.log(this)
+            console.log('def:', this.DEFER)
+            return this.DEFER
         }
         t.ok(bufferEqual(v, new Buffer([0x00, 0x68])), 'buffers')
         t.end()
-    })
+    }))
 })
 
-test('should be able to defer the type callback without a readable event firing', function (t) {
-    t.plan(1)
-
-    var stream = btos(new Buffer([0x00, 0x68]))
-
-    stream.once('readable', function () {
-        loop.parse(stream, function (v, cb) {
-            if (v === undefined) {
-                process.nextTick(function () {
-                    cb(loop.Buffer(2))
-                })
-                return loop.DEFER
-            }
-            t.ok(bufferEqual(v, new Buffer([0x00, 0x68])), 'buffers')
-            t.end()
-        })
-    })
+test('should raise done event when parser returns undefined', function (t) {
+    btos(new Buffer([0x00])).pipe(Squirt(function () {
+        return undefined
+    }))
+    .on('end', function () { t.end() })
+    // attach a readable, end will never be fired otherwise
+    .on('readable', function () {})
 })
 
 test('should be able to use all the standard node Buffer.readXXX methods', function (t) {
@@ -148,12 +120,12 @@ test('should be able to use all the standard node Buffer.readXXX methods', funct
 
     var runParser = function (funcName) {
         var x = functions[funcName]
-        loop.parse(btos(new Buffer(x.bytes)), function (v) {
+        btos(new Buffer(x.bytes)).pipe(Squirt(function (v) {
             if (v !== undefined) {
                 t.equal(v, x.expected, funcName)
             }
-            return loop[funcName]
-        })
+            return this[funcName]
+        }))
     }
 
     for (var funcName in functions) {

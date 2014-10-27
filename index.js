@@ -1,34 +1,58 @@
-exports.parse = function (stream, cb) {
-    var next = cb(undefined, deferCallback)
+var stream = require('stream')
+var util = require('util')
+var bl = require('bl')
 
-    function deferCallback (t) {
-        if (next !== DEFER) {
-            throw new Error('refusing to overwrite non-DEFER type')
-        }
-        next = t
-        read()
+var Parse = module.exports = function (cb, options) {
+    if (!(this instanceof Parse)) return new Parse(cb, options)
+
+    if (!options) {
+        options = {}
     }
+    options.objectMode = options.hasOwnProperty('objectMode')
 
-    function read () {
-        var chunk
-        while (next !== undefined && next !== DONE &&
-            next !== DEFER && (chunk = stream.read(next.len)) !== null) {
+    stream.Transform.call(this, options)
 
-            next = cb(next.get.apply(chunk, [0]), deferCallback)
-        }
-    }
-    // Optimistically read any data from the internal buffer before
-    // we start listening to 'readable' events. There are certain
-    // situations where data is available before a 'readable' event
-    // has been fired, e.g. someone listening to 'readable' upstream.
-    read()
-    stream.on('readable', read)
+    this.cb = cb
+    this.buffer = new bl()
+    this.DEFER = {}
+    this.next = cb.apply(this, [undefined])
 }
 
-var DONE = exports.DONE = {}
-var DEFER = exports.DEFER = {}
+util.inherits(Parse, stream.Transform)
 
-var Buf = exports.Buffer = function (len) {
+Parse.prototype.defer = function (t) {
+    if (this.next !== this.DEFER) {
+        throw new Error('refusing to overwrite non-DEFER type')
+    }
+    this.next = t
+    this._rread()
+}
+
+Parse.prototype._transform = function _transform (input, encoding, callback) {
+    this.buffer.append(input)
+    this._rread()
+    callback()
+}
+
+Parse.prototype._rread = function () {
+    var chunk
+    var offset = 0
+
+    while (this.next !== undefined && this.next !== this.DEFER &&
+           (chunk = this.buffer.slice(offset, offset + this.next.len)).length === this.next.len) {
+
+        offset += chunk.length
+        this.next = this.cb.apply(this, [this.next.get.apply(chunk, [0])])
+    }
+
+    if (this.next === undefined) {
+        this.push(null)
+    }
+
+    this.buffer.consume(offset)
+}
+
+var Buf = Parse.prototype.Buffer = function (len) {
     if (!(this instanceof Buf)) return new Buf(len)
     this.len = len
     this.get = function () {
@@ -36,7 +60,7 @@ var Buf = exports.Buffer = function (len) {
     }
 }
 
-var Skip = exports.Skip = function (len) {
+var Skip = Parse.prototype.Skip = function (len) {
     if (!(this instanceof Skip)) return new Skip(len)
     this.len = len
     this.get = function () {
@@ -44,7 +68,7 @@ var Skip = exports.Skip = function (len) {
     }
 }
 
-var Str = exports.String = function (len, encoding) {
+var Str = Parse.prototype.String = function (len, encoding) {
     if (!(this instanceof Str)) return new Str(len, encoding)
     this.len = len
     this.get = function () {
@@ -66,7 +90,7 @@ for (var funcName in Buffer.prototype) {
             byteLen = 8
         }
 
-        exports[funcName] = {
+        Parse.prototype[funcName] = {
             get : Buffer.prototype[funcName],
             len : byteLen
         }
