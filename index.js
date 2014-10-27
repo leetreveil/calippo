@@ -2,8 +2,8 @@ var stream = require('readable-stream')
 var util = require('util')
 var bl = require('bl')
 
-var Parse = module.exports = function (cb, options) {
-    if (!(this instanceof Parse)) return new Parse(cb, options)
+var Squirt = module.exports = function (cb, options) {
+    if (!(this instanceof Squirt)) return new Squirt(cb, options)
 
     if (!options) {
         options = {}
@@ -18,9 +18,9 @@ var Parse = module.exports = function (cb, options) {
     this.next = cb.apply(this, [undefined])
 }
 
-util.inherits(Parse, stream.Transform)
+util.inherits(Squirt, stream.Transform)
 
-Parse.prototype.defer = function (t) {
+Squirt.prototype.defer = function (t) {
     if (this.next !== this.DEFER) {
         throw new Error('refusing to overwrite non-DEFER type')
     }
@@ -28,13 +28,13 @@ Parse.prototype.defer = function (t) {
     this._rread()
 }
 
-Parse.prototype._transform = function _transform (input, encoding, callback) {
+Squirt.prototype._transform = function _transform (input, encoding, callback) {
     this.buffer.append(input)
     this._rread()
     callback()
 }
 
-Parse.prototype._rread = function () {
+Squirt.prototype._rread = function () {
     var chunk
     var offset = 0
 
@@ -52,7 +52,7 @@ Parse.prototype._rread = function () {
     this.buffer.consume(offset)
 }
 
-var Buf = Parse.prototype.Buffer = function (len) {
+var Buf = Squirt.prototype.Buffer = function (len) {
     if (!(this instanceof Buf)) return new Buf(len)
     this.len = len
     this.get = function () {
@@ -60,7 +60,7 @@ var Buf = Parse.prototype.Buffer = function (len) {
     }
 }
 
-var Skip = Parse.prototype.Skip = function (len) {
+var Skip = Squirt.prototype.Skip = function (len) {
     if (!(this instanceof Skip)) return new Skip(len)
     this.len = len
     this.get = function () {
@@ -68,7 +68,7 @@ var Skip = Parse.prototype.Skip = function (len) {
     }
 }
 
-var Str = Parse.prototype.String = function (len, encoding) {
+var Str = Squirt.prototype.String = function (len, encoding) {
     if (!(this instanceof Str)) return new Str(len, encoding)
     this.len = len
     this.get = function () {
@@ -90,7 +90,7 @@ for (var funcName in Buffer.prototype) {
             byteLen = 8
         }
 
-        Parse.prototype[funcName] = {
+        Squirt.prototype[funcName] = {
             get : Buffer.prototype[funcName],
             len : byteLen
         }
