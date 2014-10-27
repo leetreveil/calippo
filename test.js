@@ -44,7 +44,6 @@ test('should be able to read uint16be then uint16le', function (t) {
 test('should be able to read raw buffer', function (t) {
     t.plan(1)
     btos(new Buffer([0x00, 0x10])).pipe(Squirt(function (v) {
-        console.log(this)
         if (v === undefined) {
             return this.Buffer(2)
         }
@@ -72,14 +71,11 @@ test('should be able to skip n bytes', function (t) {
 test('should be able to defer the type callback', function (t) {
     t.plan(1)
     btos(new Buffer([0x00, 0x68, 0x00, 0x68])).pipe(Squirt(function (v) {
-        console.log('v: ', v)
         if (v === undefined) {
             var self = this
             process.nextTick(function () {
                 self.defer(self.Buffer(2))
             })
-            // console.log(this)
-            console.log('def:', this.DEFER)
             return this.DEFER
         }
         t.ok(bufferEqual(v, new Buffer([0x00, 0x68])), 'buffers')
