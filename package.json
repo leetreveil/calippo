@@ -25,5 +25,18 @@
   "dependencies": {
     "bl": "^0.9.3",
     "readable-stream": "^1.0.33"
+  },
+  "keywords": [
+    "parse",
+    "parser",
+    "binary",
+    "data",
+    "stream",
+    "event",
+    "emit"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/leetreveil/calippo.git"
   }
 }
