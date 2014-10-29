@@ -2,8 +2,8 @@ var stream = require('readable-stream')
 var util = require('util')
 var bl = require('bl')
 
-var Squirt = module.exports = function (cb, options) {
-    if (!(this instanceof Squirt)) return new Squirt(cb, options)
+var Calippo = module.exports = function (cb, options) {
+    if (!(this instanceof Calippo)) return new Calippo(cb, options)
 
     if (!options) {
         options = {}
@@ -18,9 +18,9 @@ var Squirt = module.exports = function (cb, options) {
     this._next = cb.apply(this, [undefined])
 }
 
-util.inherits(Squirt, stream.Transform)
+util.inherits(Calippo, stream.Transform)
 
-Squirt.prototype.defer = function (t) {
+Calippo.prototype.defer = function (t) {
     if (this._next !== this.DEFER) {
         throw new Error('refusing to overwrite non-DEFER type')
     }
@@ -28,13 +28,13 @@ Squirt.prototype.defer = function (t) {
     this._rread()
 }
 
-Squirt.prototype._transform = function _transform (input, encoding, callback) {
+Calippo.prototype._transform = function _transform (input, encoding, callback) {
     this._buffer.append(input)
     this._rread()
     callback()
 }
 
-Squirt.prototype._rread = function () {
+Calippo.prototype._rread = function () {
     var chunk
     var offset = 0
 
@@ -52,7 +52,7 @@ Squirt.prototype._rread = function () {
     this._buffer.consume(offset)
 }
 
-var Buf = Squirt.prototype.Buffer = function (len) {
+var Buf = Calippo.prototype.Buffer = function (len) {
     if (!(this instanceof Buf)) return new Buf(len)
     this.len = len
     this.get = function () {
@@ -60,7 +60,7 @@ var Buf = Squirt.prototype.Buffer = function (len) {
     }
 }
 
-var Skip = Squirt.prototype.Skip = function (len) {
+var Skip = Calippo.prototype.Skip = function (len) {
     if (!(this instanceof Skip)) return new Skip(len)
     this.len = len
     this.get = function () {
@@ -68,7 +68,7 @@ var Skip = Squirt.prototype.Skip = function (len) {
     }
 }
 
-var Str = Squirt.prototype.String = function (len, encoding) {
+var Str = Calippo.prototype.String = function (len, encoding) {
     if (!(this instanceof Str)) return new Str(len, encoding)
     this.len = len
     this.get = function () {
@@ -90,7 +90,7 @@ for (var funcName in Buffer.prototype) {
             byteLen = 8
         }
 
-        Squirt.prototype[funcName] = {
+        Calippo.prototype[funcName] = {
             get : Buffer.prototype[funcName],
             len : byteLen
         }

@@ -1,4 +1,4 @@
-var Squirt = require('./index')
+var Calippo = require('./index')
 var test = require('tape')
 var bufferEqual = require('buffer-equal')
 var streamifier = require('streamifier')
@@ -7,7 +7,7 @@ var btos = streamifier.createReadStream
 
 test('should return undefined immediately', function (t) {
     t.plan(1)
-    btos(new Buffer([0x00, 0x10])).pipe(Squirt(function (v) {
+    btos(new Buffer([0x00, 0x10])).pipe(Calippo(function (v) {
         t.equal(v, undefined)
         t.end()
     }))
@@ -15,7 +15,7 @@ test('should return undefined immediately', function (t) {
 
 test('should be able to read uint16be', function (t) {
     t.plan(1)
-    btos(new Buffer([0x00, 0x10])).pipe(Squirt(function (v) {
+    btos(new Buffer([0x00, 0x10])).pipe(Calippo(function (v) {
         if (v === undefined) {
             return this.readUInt16BE
         }
@@ -27,7 +27,7 @@ test('should be able to read uint16be', function (t) {
 test('should be able to read uint16be then uint16le', function (t) {
     t.plan(2)
     var pos = 0
-    btos(new Buffer([0x00, 0x10, 0x10, 0x00])).pipe(Squirt(function (v) {
+    btos(new Buffer([0x00, 0x10, 0x10, 0x00])).pipe(Calippo(function (v) {
         if (v === undefined) {
             return this.readUInt16BE
         }
@@ -43,7 +43,7 @@ test('should be able to read uint16be then uint16le', function (t) {
 
 test('should be able to read raw buffer', function (t) {
     t.plan(1)
-    btos(new Buffer([0x00, 0x10])).pipe(Squirt(function (v) {
+    btos(new Buffer([0x00, 0x10])).pipe(Calippo(function (v) {
         if (v === undefined) {
             return this.Buffer(2)
         }
@@ -55,7 +55,7 @@ test('should be able to read raw buffer', function (t) {
 test('should be able to skip n bytes', function (t) {
     t.plan(1)
     var pos = 0
-    btos(new Buffer([0x00, 0x00, 0x10, 0x00])).pipe(Squirt(function (v) {
+    btos(new Buffer([0x00, 0x00, 0x10, 0x00])).pipe(Calippo(function (v) {
         if (v === undefined) {
             return this.Skip(2)
         }
@@ -70,7 +70,7 @@ test('should be able to skip n bytes', function (t) {
 
 test('should be able to defer the type callback', function (t) {
     t.plan(1)
-    btos(new Buffer([0x00, 0x68, 0x00, 0x68])).pipe(Squirt(function (v) {
+    btos(new Buffer([0x00, 0x68, 0x00, 0x68])).pipe(Calippo(function (v) {
         if (v === undefined) {
             var self = this
             process.nextTick(function () {
@@ -84,7 +84,7 @@ test('should be able to defer the type callback', function (t) {
 })
 
 test('should raise done event when parser returns undefined', function (t) {
-    btos(new Buffer([0x00])).pipe(Squirt(function () {
+    btos(new Buffer([0x00])).pipe(Calippo(function () {
         return undefined
     }))
     .on('end', function () { t.end() })
@@ -116,7 +116,7 @@ test('should be able to use all the standard node Buffer.readXXX methods', funct
 
     var runParser = function (funcName) {
         var x = functions[funcName]
-        btos(new Buffer(x.bytes)).pipe(Squirt(function (v) {
+        btos(new Buffer(x.bytes)).pipe(Calippo(function (v) {
             if (v !== undefined) {
                 t.equal(v, x.expected, funcName)
             }
