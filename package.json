@@ -1,6 +1,6 @@
 {
   "name": "calippo",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "binary stream parser",
   "main": "index.js",
   "scripts": {
