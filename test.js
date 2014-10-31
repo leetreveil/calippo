@@ -119,3 +119,32 @@ test('should be able to use all the standard node Buffer.readXXX methods', funct
         runParser(funcName)
     }
 })
+
+test('should be able to parse length prefixed message stream', function (t) {
+    t.plan(1)
+
+    var bufs = []
+    var pos
+
+    btos(new Buffer([0x01, 0xFE, 0x02, 0xFE, 0xFE])).pipe(Calippo(function (value) {
+        if (value === undefined) {
+            pos = 0
+            return this.readUInt8
+        }
+        if (pos === 0) {
+            pos = 1
+            return this.Buffer(value)
+        }
+        if (pos === 1) {
+            this.push(value)
+            pos = 0
+            return this.readUInt8
+        }
+    }))
+    .on('readable', function () {
+        bufs.push(this.read())
+    })
+    .on('end', function () {
+        t.ok(bufferEqual(Buffer.concat(bufs), new Buffer([0xFE, 0xFE, 0xFE])), 'buffers')
+    })
+})
