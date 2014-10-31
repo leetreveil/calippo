@@ -8,7 +8,6 @@ var Calippo = module.exports = function (cb, options) {
     if (!options) {
         options = {}
     }
-    options.objectMode = options.hasOwnProperty('objectMode')
 
     stream.Transform.call(this, options)
 
