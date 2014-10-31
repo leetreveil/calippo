@@ -83,15 +83,6 @@ test('should be able to defer the type callback', function (t) {
     }))
 })
 
-test('should raise done event when parser returns undefined', function (t) {
-    btos(new Buffer([0x00])).pipe(Calippo(function () {
-        return undefined
-    }))
-    .on('end', function () { t.end() })
-    // attach a readable, end will never be fired otherwise
-    .on('readable', function () {})
-})
-
 test('should be able to use all the standard node Buffer.readXXX methods', function (t) {
     var functions = {
         'readUInt8': { expected: 255, bytes : [0xFF] },

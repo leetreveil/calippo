@@ -45,10 +45,6 @@ Calippo.prototype._rread = function () {
         this._next = this._cb.apply(this, [this._next.get.apply(chunk, [0])])
     }
 
-    if (this._next === undefined) {
-        this.push(null)
-    }
-
     this._buffer.consume(offset)
 }
 
