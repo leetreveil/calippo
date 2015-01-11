@@ -2,10 +2,11 @@ var stream = require('readable-stream')
 var util = require('util')
 var bl = require('bl')
 
-var Calippo = module.exports = function (cb, options) {
-    if (!(this instanceof Calippo)) return new Calippo(cb, options)
+var Calippo = module.exports = function (options, cb) {
+    if (!(this instanceof Calippo)) return new Calippo(options, cb)
 
-    if (!options) {
+    if (typeof options === 'function') {
+        cb = options
         options = {}
     }
 

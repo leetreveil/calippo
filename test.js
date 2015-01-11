@@ -152,9 +152,10 @@ test('should be able to parse length prefixed message stream', function (t) {
 test('should be able to output objects', function (t) {
     t.plan(1)
 
-    btos(new Buffer([0x01, 0xFE, 0x02, 0xFE, 0xFE])).pipe(Calippo(function (value) {
+    var buf = new Buffer([0x01, 0xFE, 0x02, 0xFE, 0xFE])
+    btos(buf).pipe(Calippo({'objectMode': true}, function (value) {
         this.push('poop')
-    }, {'objectMode': true}))
+    }))
     .on('readable', function () {
         t.strictEqual(this.read(), 'poop')
     })
