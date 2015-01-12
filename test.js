@@ -160,3 +160,14 @@ test('should be able to output objects', function (t) {
         t.strictEqual(this.read(), 'poop')
     })
 })
+
+test('should be able to read an encoded string', function (t) {
+    t.plan(1)
+    btos(new Buffer([0x68, 0x65, 0x6C, 0x6C, 0x6F])).pipe(Calippo(function (v) {
+        if (v === undefined) {
+            return this.String(5, 'ascii')
+        }
+        t.equal(v, 'hello', 'string')
+        t.end()
+    }))
+})
