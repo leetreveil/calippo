@@ -24,7 +24,8 @@
   },
   "dependencies": {
     "bl": "^0.9.3",
-    "readable-stream": "^1.0.33"
+    "through2": "^0.6.3",
+    "xtend": "^4.0.0"
   },
   "keywords": [
     "parse",
