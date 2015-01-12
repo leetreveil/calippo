@@ -49,11 +49,11 @@ somestream.pipe(parser)
 API
 ----
 
-`Calippo(callback, options)`
-
-`callback` takes a single argument, the value just read from the stream, and is expected to return the type of value to read next, e.g. `this.Buffer(len)`. It is this callback that ultimately implements the application protocol, you are expected to manage state yourself.
+`Calippo(options, callback)`
 
 `options` is an object passed down into the node [Transform](http://nodejs.org/api/stream.html#stream_new_stream_transform_options) api, pass `{objectMode: true}` if you want to output non binary data with `this.push()`
+
+`callback` takes a single argument, the value just read from the stream, and is expected to return the type of value to read next, e.g. `this.Buffer(len)`. It is this callback that ultimately implements the application protocol, you are expected to manage state yourself.
 
 All expected values are returned from the `callback`, and and the types of values available are all attached to the `this` scope within the callback:
 
