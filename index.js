@@ -1,5 +1,4 @@
 var through2 = require('through2')
-var util = require('util')
 var bl = require('bl')
 var xtend = require('xtend/mutable')
 
