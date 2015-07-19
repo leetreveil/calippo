@@ -2,7 +2,7 @@ var through2 = require('through2')
 var bl = require('bl')
 var xtend = require('xtend/mutable')
 
-var Calippo = module.exports = function (options, cb) {
+module.exports = function (options, cb) {
     if (typeof options === 'function') {
         cb = options
         options = {}
